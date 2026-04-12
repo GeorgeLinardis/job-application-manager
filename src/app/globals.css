@@ -3,3 +3,10 @@
 body {
   background-color: #f9fafb;
 }
+
+@layer base {
+  button,
+  a {
+    cursor: pointer;
+  }
+}
