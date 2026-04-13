@@ -9,6 +9,16 @@ export type TimelineStatus =
   | "rejected"
   | "never_answered";
 
+/** Currency used for salary fields. */
+export type SalaryCurrency = "EUR" | "USD" | "GBP";
+
+/** Symbol per currency. */
+export const SALARY_CURRENCY_SYMBOLS: Record<SalaryCurrency, string> = {
+  EUR: "€",
+  USD: "$",
+  GBP: "£",
+};
+
 /** Where the job ad was originally found. */
 export type JobSource =
   | "linkedin"
@@ -41,8 +51,11 @@ export interface Job {
   jobLink: string;
   salaryExpected: number | null;
   salaryProposed: number | null;
+  salaryCurrency: SalaryCurrency;
   source: JobSource;
   timeline: TimelineEntry[];
+  /** Free-text notes about the job ad or application. */
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,7 +73,9 @@ export interface JobFormFields {
   dateSent: string;
   salaryExpected: number | null;
   salaryProposed: number | null;
+  salaryCurrency: SalaryCurrency;
   source: JobSource;
+  notes?: string;
 }
 
 /** Full data passed to storage — form fields plus the auto-built initial timeline. */

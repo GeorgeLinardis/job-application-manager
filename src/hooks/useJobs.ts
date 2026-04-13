@@ -48,6 +48,21 @@ export function useJobs() {
     },
   });
 
+  /** Updates a job and replaces it in the cache immediately. */
+  const { mutateAsync: updateJob } = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<JobFormData> }): Promise<Job> => {
+      if (isOwner) return api.updateJob(id, patch);
+      const updated = localStore.update(id, patch);
+      if (!updated) throw new Error("Job not found");
+      return Promise.resolve(updated);
+    },
+    onSuccess: (updatedJob) => {
+      queryClient.setQueryData<Job[]>([JOBS_QUERY_KEY, isOwner], (previous = []) =>
+        previous.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+      );
+    },
+  });
+
   /** Deletes a job and removes it from the cache immediately. */
   const { mutateAsync: deleteJob } = useMutation({
     mutationFn: (id: string): Promise<void> =>
@@ -61,5 +76,5 @@ export function useJobs() {
     },
   });
 
-  return { jobs, isLoading, addJob, deleteJob };
+  return { jobs, isLoading, addJob, updateJob, deleteJob };
 }

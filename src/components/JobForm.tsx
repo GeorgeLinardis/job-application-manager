@@ -6,6 +6,8 @@ import {
   JobFormFields,
   JobSource,
   JOB_SOURCE_LABELS,
+  SalaryCurrency,
+  SALARY_CURRENCY_SYMBOLS,
 } from "@/types/job";
 
 interface JobFormProps {
@@ -34,10 +36,14 @@ export function JobForm({ initial, onSubmit, onCancel }: JobFormProps) {
           salaryExpected: initial.salaryExpected ?? undefined,
           salaryProposed: initial.salaryProposed ?? undefined,
           source: initial.source,
+          salaryCurrency: initial.salaryCurrency,
+          notes: initial.notes ?? "",
         }
       : {
           source: "linkedin",
+          salaryCurrency: "EUR" as SalaryCurrency,
           dateSent: today(),
+          notes: "",
         },
   });
 
@@ -79,7 +85,17 @@ export function JobForm({ initial, onSubmit, onCancel }: JobFormProps) {
           />
         </FormField>
 
-        <FormField label="Expected Salary (€)" error={errors.salaryExpected?.message}>
+        <FormField label="Currency" error={undefined}>
+          <select {...register("salaryCurrency")} className={inputClass}>
+            {(Object.keys(SALARY_CURRENCY_SYMBOLS) as SalaryCurrency[]).map((currency) => (
+              <option key={currency} value={currency}>
+                {SALARY_CURRENCY_SYMBOLS[currency]} {currency}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField label="Expected Salary" error={errors.salaryExpected?.message}>
           <input
             {...register("salaryExpected", { valueAsNumber: true })}
             type="number"
@@ -89,7 +105,7 @@ export function JobForm({ initial, onSubmit, onCancel }: JobFormProps) {
           />
         </FormField>
 
-        <FormField label="Proposed Salary (€)" error={errors.salaryProposed?.message}>
+        <FormField label="Proposed Salary" error={errors.salaryProposed?.message}>
           <input
             {...register("salaryProposed", { valueAsNumber: true })}
             type="number"
@@ -109,6 +125,15 @@ export function JobForm({ initial, onSubmit, onCancel }: JobFormProps) {
           </select>
         </FormField>
       </div>
+
+      <FormField label="Notes" error={undefined}>
+        <textarea
+          {...register("notes")}
+          rows={3}
+          placeholder="Anything relevant about this role or company..."
+          className={`${inputClass} resize-none`}
+        />
+      </FormField>
 
       <div className="flex gap-3 pt-2">
         <button
