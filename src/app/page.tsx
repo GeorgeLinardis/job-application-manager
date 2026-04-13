@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BriefcaseBusiness, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { BriefcaseBusiness, Plus, Pencil, Trash2, Search, LayoutGrid, List } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
 import { useAuth } from "@/context/AuthContext";
 import { JobForm } from "@/components/JobForm";
@@ -34,6 +34,7 @@ function formatDate(isoDate: string): string {
 }
 
 type Tab = "list" | "charts";
+type ViewMode = "default" | "compact";
 
 /** Inner component — uses useSearchParams, must be inside Suspense. */
 function HomeContent() {
@@ -48,6 +49,8 @@ function HomeContent() {
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TimelineStatus | "all">("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("compact");
+  const [orderBy, setOrderBy] = useState<"company_asc" | "company_desc" | "date_asc" | "date_desc">("company_asc");
 
   function setActiveTab(tab: Tab) {
     const params = new URLSearchParams(searchParams.toString());
@@ -104,12 +107,20 @@ function HomeContent() {
     return status !== "rejected" && status !== "never_answered";
   }).length;
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = job.companyName.toLowerCase().includes(searchQuery.toLowerCase());
-    const currentStatus = job.timeline[job.timeline.length - 1]?.status;
-    const matchesStatus = statusFilter === "all" || currentStatus === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredJobs = jobs
+    .filter((job) => {
+      const matchesSearch = job.companyName.toLowerCase().includes(searchQuery.toLowerCase());
+      const currentStatus = job.timeline[job.timeline.length - 1]?.status;
+      const matchesStatus = statusFilter === "all" || currentStatus === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (orderBy === "company_asc") return a.companyName.localeCompare(b.companyName);
+      if (orderBy === "company_desc") return b.companyName.localeCompare(a.companyName);
+      const dateA = a.timeline[0]?.date ?? "";
+      const dateB = b.timeline[0]?.date ?? "";
+      return orderBy === "date_asc" ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA);
+    });
 
   const statuses = Object.keys(TIMELINE_STATUS_LABELS) as TimelineStatus[];
 
@@ -184,7 +195,7 @@ function HomeContent() {
             )}
 
             {!isLoading && jobs.length > 0 && (
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
@@ -208,8 +219,34 @@ function HomeContent() {
                       </option>
                     ))}
                   </select>
+                  <select
+                    value={orderBy}
+                    onChange={(event) => setOrderBy(event.target.value as typeof orderBy)}
+                    className="px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
+                  >
+                    <option value="company_asc">Company A–Z</option>
+                    <option value="company_desc">Company Z–A</option>
+                    <option value="date_desc">Newest first</option>
+                    <option value="date_asc">Oldest first</option>
+                  </select>
+                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
+                    <button
+                      onClick={() => setViewMode("default")}
+                      title="Default view"
+                      className={`p-1.5 transition-colors ${viewMode === "default" ? "bg-indigo-50 text-indigo-600" : "text-gray-400 hover:text-gray-600"}`}
+                    >
+                      <List className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("compact")}
+                      title="Compact view"
+                      className={`p-1.5 transition-colors ${viewMode === "compact" ? "bg-indigo-50 text-indigo-600" : "text-gray-400 hover:text-gray-600"}`}
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 pr-3">
+                <div className="flex items-center gap-4 pr-3 w-full sm:w-auto">
                   {!isOwner && (
                     <button
                       onClick={() => clearAllJobs()}
@@ -245,6 +282,29 @@ function HomeContent() {
               <div className="text-center py-16 text-gray-400">
                 <p className="font-medium text-gray-500">No matching applications</p>
                 <p className="text-sm mt-1">Try adjusting your search or filter.</p>
+              </div>
+            ) : viewMode === "compact" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {filteredJobs.map((job) => {
+                  const lastEntry = job.timeline[job.timeline.length - 1];
+                  const currentStatus = lastEntry?.status ?? "submitted";
+                  const isEditing = jobToEdit?.id === job.id;
+                  return (
+                    <button
+                      key={job.id}
+                      onClick={() => { setJobToEdit(job); setShowForm(false); }}
+                      className={`bg-white border rounded-xl px-3 py-3 shadow-sm text-left transition-colors hover:border-indigo-300 ${
+                        isEditing ? "border-indigo-300 bg-indigo-50/30" : "border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <StatusBadge status={currentStatus} />
+                      </div>
+                      <p className="font-semibold text-gray-900 text-sm truncate">{job.companyName}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{job.jobTitle}</p>
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <ul className="space-y-3">
