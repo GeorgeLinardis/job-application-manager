@@ -9,6 +9,7 @@ import { JobForm } from "@/components/JobForm";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TimelineEditor } from "@/components/TimelineEditor";
+import { JobCharts } from "@/components/JobCharts";
 import {
   Job,
   JobFormData,
@@ -30,6 +31,7 @@ const AuthStatus = dynamic(() => import("@/components/AuthStatus"), {
 export default function Home() {
   const { isOwner } = useAuth();
   const { jobs, isLoading, addJob, updateJob, deleteJob, loadDemoData, clearAllJobs } = useJobs();
+  const [activeTab, setActiveTab] = useState<"list" | "charts">("list");
   const [showForm, setShowForm] = useState(false);
   const [jobToEdit, setJobToEdit] = useState<Job | null>(null);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
@@ -135,6 +137,27 @@ export default function Home() {
       </header>
 
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
+          {(["list", "charts"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
+                activeTab === tab
+                  ? "border-indigo-600 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              {tab === "list" ? "Applications" : "Analytics"}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "charts" && <JobCharts jobs={jobs} />}
+
+        {activeTab === "list" && (
+        <>
         {/* Add form */}
         {showForm && (
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
@@ -295,6 +318,8 @@ export default function Home() {
               );
             })}
           </ul>
+        )}
+        </>
         )}
       </div>
 
