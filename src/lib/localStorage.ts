@@ -65,4 +65,9 @@ export const localStore = {
   remove(id: string): void {
     writeToStorage(readFromStorage().filter((job) => job.id !== id));
   },
+
+  /** Removes all jobs from localStorage. */
+  clear(): void {
+    writeToStorage([]);
+  },
 };

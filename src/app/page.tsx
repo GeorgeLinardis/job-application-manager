@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { BriefcaseBusiness, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
+import { useAuth } from "@/context/AuthContext";
 import { JobForm } from "@/components/JobForm";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -27,7 +28,8 @@ const AuthStatus = dynamic(() => import("@/components/AuthStatus"), {
 });
 
 export default function Home() {
-  const { jobs, isLoading, addJob, updateJob, deleteJob } = useJobs();
+  const { isOwner } = useAuth();
+  const { jobs, isLoading, addJob, updateJob, deleteJob, loadDemoData, clearAllJobs } = useJobs();
   const [showForm, setShowForm] = useState(false);
   const [jobToEdit, setJobToEdit] = useState<Job | null>(null);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
@@ -192,9 +194,19 @@ export default function Home() {
                 ))}
               </select>
             </div>
-            <p className="text-sm font-medium text-gray-500 pr-3">
-              <span className="text-gray-900 font-semibold">{inProgressCount}</span> in progress
-            </p>
+            <div className="flex items-center gap-4 pr-3">
+              {!isOwner && (
+                <button
+                  onClick={() => clearAllJobs()}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  Clear all
+                </button>
+              )}
+              <p className="text-sm font-medium text-gray-500">
+                <span className="text-gray-900 font-semibold">{inProgressCount}</span> in progress
+              </p>
+            </div>
           </div>
         )}
 
@@ -207,6 +219,14 @@ export default function Home() {
             <p className="text-sm mt-1">
               Click &quot;+ Add Job&quot; to track your first application.
             </p>
+            {!isOwner && (
+              <button
+                onClick={() => loadDemoData()}
+                className="mt-4 px-4 py-2 text-sm text-indigo-600 border border-indigo-200 rounded-full hover:bg-indigo-50 transition-colors font-medium"
+              >
+                Load demo data
+              </button>
+            )}
           </div>
         ) : filteredJobs.length === 0 ? (
           <div className="text-center py-16 text-gray-400">

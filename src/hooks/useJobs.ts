@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { Job, JobFormData } from "@/types/job";
 import { localStore } from "@/lib/localStorage";
+import { DEMO_JOBS } from "@/lib/demoData";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
@@ -76,5 +77,25 @@ export function useJobs() {
     },
   });
 
-  return { jobs, isLoading, addJob, updateJob, deleteJob };
+  /** Loads 10 demo jobs into localStorage (guest only). */
+  const { mutateAsync: loadDemoData } = useMutation({
+    mutationFn: async (): Promise<Job[]> =>
+      DEMO_JOBS.map((data) => localStore.add(data)),
+    onSuccess: (added) => {
+      queryClient.setQueryData<Job[]>(
+        [JOBS_QUERY_KEY, false],
+        (previous = []) => [...added, ...previous]
+      );
+    },
+  });
+
+  /** Clears all jobs from localStorage (guest only). */
+  const { mutateAsync: clearAllJobs } = useMutation({
+    mutationFn: async (): Promise<void> => localStore.clear(),
+    onSuccess: () => {
+      queryClient.setQueryData<Job[]>([JOBS_QUERY_KEY, false], []);
+    },
+  });
+
+  return { jobs, isLoading, addJob, updateJob, deleteJob, loadDemoData, clearAllJobs };
 }
