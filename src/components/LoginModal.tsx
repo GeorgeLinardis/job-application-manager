@@ -63,7 +63,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
             <input
               {...register("username", { required: "Required" })}
               autoFocus
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             {errors.username && (
               <p className="mt-1 text-xs text-red-500">
@@ -79,7 +79,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
             <input
               {...register("password", { required: "Required" })}
               type="password"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             {errors.password && (
               <p className="mt-1 text-xs text-red-500">
@@ -98,7 +98,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
+              className="flex-1 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium shadow-sm transition-colors"
             >
               {isSubmitting ? "Logging in..." : "Login"}
             </button>

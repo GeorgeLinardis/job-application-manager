@@ -4,9 +4,17 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
   ReactNode,
 } from "react";
+
+/**
+ * useLayoutEffect on the client (fires before browser paint),
+ * falls back to useEffect on the server (SSR/static build) to avoid warnings.
+ */
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL ?? "";
 
@@ -37,8 +45,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isOwner, setIsOwner] = useState(false);
 
-  /** On first render, check if a JWT already exists and restore owner state. */
-  useEffect(() => {
+  /**
+   * Reads the JWT from localStorage before the browser paints.
+   * useLayoutEffect fires synchronously after DOM commit — the user
+   * never sees the wrong auth state on screen.
+   */
+  useIsomorphicLayoutEffect(() => {
     setIsOwner(!!localStorage.getItem(TOKEN_KEY));
   }, []);
 
