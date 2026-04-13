@@ -28,7 +28,7 @@ interface AuthContextValue {
    *
    * MVP — single owner only. No registration or multi-user support.
    */
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe: boolean) => Promise<void>;
   /** Removes the JWT from localStorage and resets owner state to false. */
   logout: () => void;
 }
@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Stores the returned JWT in localStorage on success.
    * Throws with the server error message on failure.
    */
-  async function login(username: string, password: string): Promise<void> {
-    const { token } = await api.login(username, password);
+  async function login(username: string, password: string, rememberMe: boolean): Promise<void> {
+    const { token } = await api.login(username, password, rememberMe);
     localStorage.setItem(TOKEN_KEY, token);
     setIsOwner(true);
   }

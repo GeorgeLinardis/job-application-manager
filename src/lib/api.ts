@@ -32,10 +32,10 @@ export const api = {
    * Authenticates the owner against the Worker.
    * Returns a signed JWT on success, throws on bad credentials.
    */
-  login: (username: string, password: string) =>
+  login: (username: string, password: string, rememberMe: boolean) =>
     request<{ token: string }>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, rememberMe }),
     }),
 
   /** Fetches all jobs from Cloudflare KV. */

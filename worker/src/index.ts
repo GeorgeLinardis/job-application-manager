@@ -50,6 +50,7 @@ app.post("/auth/login", async (requestContext) => {
   }
 
   const { username, password } = body;
+  const rememberMe = body.rememberMe === true;
 
   if (
     username !== requestContext.env.OWNER_USERNAME ||
@@ -58,10 +59,14 @@ app.post("/auth/login", async (requestContext) => {
     return requestContext.json({ error: "Invalid credentials" }, 401);
   }
 
+  const expiresInSeconds = rememberMe
+    ? 60 * 60 * 24 * 30  // 30 days
+    : 60 * 60 * 24 * 7;  // 7 days
+
   const token = await sign(
     {
       sub: "owner",
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
+      exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
     },
     requestContext.env.JWT_SECRET,
     "HS256"

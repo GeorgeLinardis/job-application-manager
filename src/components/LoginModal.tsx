@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 interface LoginFormFields {
   username: string;
   password: string;
+  rememberMe: boolean;
 }
 
 interface LoginModalProps {
@@ -31,7 +32,7 @@ export function LoginModal({ onClose }: LoginModalProps) {
   async function onSubmit(fields: LoginFormFields): Promise<void> {
     setServerError(null);
     try {
-      await login(fields.username, fields.password);
+      await login(fields.username, fields.password, fields.rememberMe);
       onClose();
     } catch (error) {
       setServerError(error instanceof Error ? error.message : "Login failed");
@@ -87,6 +88,15 @@ export function LoginModal({ onClose }: LoginModalProps) {
               </p>
             )}
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              {...register("rememberMe")}
+              type="checkbox"
+              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="text-sm text-gray-600">Remember me for 30 days</span>
+          </label>
 
           {serverError && (
             <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
