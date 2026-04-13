@@ -8,6 +8,8 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { api } from "@/lib/api";
+import { TOKEN_KEY } from "@/lib/constants";
 
 /**
  * useLayoutEffect on the client (fires before browser paint),
@@ -15,11 +17,6 @@ import {
  */
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL ?? "";
-
-/** localStorage key used to persist the JWT between page refreshes. */
-const TOKEN_KEY = "joa_token";
 
 interface AuthContextValue {
   /** True when the owner is logged in. Guests are always false. */
@@ -54,19 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsOwner(!!localStorage.getItem(TOKEN_KEY));
   }, []);
 
+  /**
+   * Delegates to api.login() which handles the fetch and error handling.
+   * Stores the returned JWT in localStorage on success.
+   * Throws with the server error message on failure.
+   */
   async function login(username: string, password: string): Promise<void> {
-    const response = await fetch(`${WORKER_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw new Error((body as { error?: string }).error ?? "Login failed");
-    }
-
-    const { token } = (await response.json()) as { token: string };
+    const { token } = await api.login(username, password);
     localStorage.setItem(TOKEN_KEY, token);
     setIsOwner(true);
   }

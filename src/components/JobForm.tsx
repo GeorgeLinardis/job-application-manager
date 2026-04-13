@@ -121,7 +121,8 @@ export function JobForm({ initial, onSubmit, onCancel }: JobFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-5 py-2 text-sm text-gray-600 hover:text-gray-900"
+          disabled={isSubmitting}
+          className="px-5 py-2 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
         >
           Cancel
         </button>

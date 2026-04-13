@@ -1,7 +1,5 @@
 import { Job, JobFormData } from "@/types/job";
-
-const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL ?? "";
-const TOKEN_KEY = "joa_token";
+import { TOKEN_KEY, WORKER_URL } from "@/lib/constants";
 
 /**
  * Base fetch wrapper for all Worker API calls.
@@ -50,4 +48,8 @@ export const api = {
   /** Deletes a job by id from Cloudflare KV. */
   deleteJob: (id: string) =>
     request<{ success: boolean }>(`/jobs/${id}`, { method: "DELETE" }),
+
+  /** Updates an existing job by id in Cloudflare KV. Returns the updated job. */
+  updateJob: (id: string, patch: Partial<JobFormData>) =>
+    request<Job>(`/jobs/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
 };

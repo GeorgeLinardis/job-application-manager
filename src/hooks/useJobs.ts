@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { Job, JobFormData } from "@/types/job";
 import { localStore } from "@/lib/localStorage";
@@ -19,6 +20,14 @@ const JOBS_QUERY_KEY = "jobs";
 export function useJobs() {
   const { isOwner } = useAuth();
   const queryClient = useQueryClient();
+
+  /**
+   * Evicts the stale cache for the opposite role whenever auth state changes.
+   * Prevents cached owner jobs from persisting after logout (and vice versa).
+   */
+  useEffect(() => {
+    queryClient.removeQueries({ queryKey: [JOBS_QUERY_KEY, !isOwner] });
+  }, [isOwner, queryClient]);
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: [JOBS_QUERY_KEY, isOwner],

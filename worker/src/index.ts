@@ -37,10 +37,19 @@ app.get("/", (requestContext) => requestContext.json({ status: "ok" }));
  * Returns a signed JWT valid for 7 days on success.
  */
 app.post("/auth/login", async (requestContext) => {
-  const { username, password } = await requestContext.req.json<{
-    username: string;
-    password: string;
-  }>();
+  const body = await requestContext.req.json<Record<string, unknown>>().catch(() => null);
+
+  if (
+    !body ||
+    typeof body.username !== "string" ||
+    typeof body.password !== "string" ||
+    !body.username.trim() ||
+    !body.password.trim()
+  ) {
+    return requestContext.json({ error: "username and password are required" }, 400);
+  }
+
+  const { username, password } = body;
 
   if (
     username !== requestContext.env.OWNER_USERNAME ||
@@ -125,6 +134,36 @@ app.post("/jobs", async (requestContext) => {
   await writeJobsToKV(requestContext.env.JOBS_KV, [newJob, ...jobs]);
 
   return requestContext.json(newJob, 201);
+});
+
+/**
+ * PUT /jobs/:id
+ * Updates an existing job application by id in KV storage.
+ * Merges the request body with the stored job, preserving id and createdAt.
+ */
+app.put("/jobs/:id", async (requestContext) => {
+  const jobId = requestContext.req.param("id");
+  const patch = await requestContext.req.json<Record<string, unknown>>();
+  const jobs = await readJobsFromKV(requestContext.env.JOBS_KV);
+  const typedJobs = jobs as Array<{ id: string }>;
+
+  const jobIndex = typedJobs.findIndex((job) => job.id === jobId);
+  if (jobIndex === -1) {
+    return requestContext.json({ error: "Job not found" }, 404);
+  }
+
+  const updatedJob = {
+    ...(jobs[jobIndex] as object),
+    ...patch,
+    id: jobId,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedJobs = [...jobs];
+  updatedJobs[jobIndex] = updatedJob;
+  await writeJobsToKV(requestContext.env.JOBS_KV, updatedJobs);
+
+  return requestContext.json(updatedJob);
 });
 
 /**
